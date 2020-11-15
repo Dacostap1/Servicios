@@ -41,7 +41,7 @@ class LocalAnexLoadData extends Command
         $url = storage_path('app/local_anexo') . '/padron_reducido_local_anexo.txt';
 
         if(env('APP_ENV') == 'local'){
-          $url = 'C:/xampp/htdocs/Laravel/anikama-servicios/storage/app/local_anexo/padron_reducido_local_anexo.txt';
+          $url = 'C:/xampp/htdocs/Laravel/servicios/storage/app/local_anexo/padron_reducido_local_anexo.txt';
         }
        
          DB::connection()->getPdo()

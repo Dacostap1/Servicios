@@ -40,7 +40,7 @@ class LocalAnexGetData extends Command
      */
     public function handle()
     {
-        $response = Http::get('http://www.sunat.gob.pe/descargaPRR/padron_reducido_local_anexo.zip');
+        $response = Http::withHeaders(['User-Agent' => 'Moliza / 5.0'])->get('http://www.sunat.gob.pe/descargaPRR/padron_reducido_local_anexo.zip');
         Storage::disk('local_anexo')->put('local_anexo.zip', $response->body());   
         
         

@@ -44,7 +44,7 @@ class LoadData extends Command
        $url = storage_path('app/padron_reducido') . '/padron_reducido_ruc.txt';
 
        if(env('APP_ENV') == 'local'){
-         $url = 'C:/xampp/htdocs/Laravel/anikama-servicios/storage/app/padron_reducido/padron_reducido_ruc.txt';
+         $url = 'C:/xampp/htdocs/Laravel/servicios/storage/app/padron_reducido/padron_reducido_ruc.txt';
        }
       
         DB::connection()->getPdo()
