@@ -11,9 +11,9 @@ class ExchangeRateController extends Controller
     public function show(Request $request){
  
         if(!$request->has('mounth') && !$request->has('year')){
-            $response = Http::get('http://www.sunat.gob.pe/cl-at-ittipcam/tcS01Alias');
+            $response = Http::withHeaders(['User-Agent' => 'Moliza / 5.0'])->get('http://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias');
         }else{
-            $response = Http::get('http://www.sunat.gob.pe/cl-at-ittipcam/tcS01Alias?mes='.$request->mounth.'&anho='.$request->year.'&accion=init');
+            $response = Http::withHeaders(['User-Agent' => 'Moliza / 5.0'])->get('http://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias?mes='.$request->mounth.'&anho='.$request->year.'&accion=init');
         }
         
         if($response->failed()){
