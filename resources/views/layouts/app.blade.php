@@ -13,7 +13,7 @@
     <script src="{{ asset('js/app.js') }}" defer></script>
 
     <!-- Favicon -->
-    <link rel="shortcut icon" href="{{ asset('img/anikama.ico') }}"> 
+    <link rel="shortcut icon" href="{{ asset('img/services.ico') }}"> 
 
     <!-- Fonts -->
     <link rel="dns-prefetch" href="//fonts.gstatic.com">
