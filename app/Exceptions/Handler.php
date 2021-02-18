@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -50,6 +51,12 @@ class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $exception)
     {
+        if ($exception instanceof HttpException) { //Laravel aun no lanza la exception MaintenanceModeException
+            if ($request->wantsJson() && $exception->getStatusCode() == 503) {
+                return response()->json(["data" => "Estamos en mantenimiento"], 503);
+            }
+        }
+
         return parent::render($request, $exception);
     }
 }
