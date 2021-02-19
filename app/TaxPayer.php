@@ -12,9 +12,11 @@ class TaxPayer extends Model
 
     public function scopeSearch(Builder $query, $values)
     {
-        foreach (Str::of($values)->explode(' ') as $value) {
-            $query->orwhere('emp_ruc', 'like',  "%{$value}%")
-                ->orwhere('emp_descripcion', 'like',  "%{$value}%");
-        }
+        $query->when(is_numeric($values), function ($query) use ($values) { //Si son numeros busca por ruc
+            return $query->where('emp_ruc', 'like',  "%{$values}%");
+        }, function ($query) use ($values) {
+            return
+                $query->where('emp_descripcion', 'like',  "%{$values}%");
+        });
     }
 }
