@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Http\Controllers\ApiController;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Resources\LocalAnexoResource;
+use App\Http\Resources\TaxpayerResource;
 
 class TaxPayerController extends ApiController
 {
@@ -17,11 +19,11 @@ class TaxPayerController extends ApiController
     protected $email_soporte;
 
     public function __construct()
-    {     
+    {
         $this->token_reniec = env('TOKEN_CAPTCHA_RENIEC');
         $this->email_soporte = env('MAIL_SUPPORT_ANIKAMA');
     }
- 
+
 
     /**
      * Display a listing of the resource.
@@ -30,7 +32,11 @@ class TaxPayerController extends ApiController
      */
     public function index(Request $request)
     {
-        $rules = [
+
+        $taxpayers = TaxPayer::applyFilters()->applySorts()->jsonPaginate();
+        return TaxpayerResource::collection($taxpayers);
+
+        /*    $rules = [
             'per_page' => 'integer|min:2|max:50'
         ];
 
@@ -42,7 +48,7 @@ class TaxPayerController extends ApiController
             $perPage = (int)$request->per_page;
         }
 
-        return $this->showAll($request, $perPage);
+        return $this->showAll($request, $perPage); */
     }
 
     /**
@@ -53,15 +59,26 @@ class TaxPayerController extends ApiController
      */
     public function show($cadena)  //ahora es para ruc y dni
     {
-        if(strlen($cadena) == 8){
-            $tax_payer = TaxPayer::where('emp_ruc', 'LIKE',"10{$cadena}%")->get();
-            return $this->showOne($tax_payer);
+        if (strlen($cadena) == 8) {
+            $tax_payer = TaxPayer::where('emp_ruc', 'LIKE', "10{$cadena}%")->first();
+            if ($tax_payer) {
+                return TaxpayerResource::make($tax_payer);
+            }
         }
-        $tax_payer = TaxPayer::where('emp_ruc', $cadena)->get();
-        return $this->showOne($tax_payer);
+
+        if (strlen($cadena) == 11) {
+
+            $tax_payer = TaxPayer::where('emp_ruc', $cadena)->first();
+            if ($tax_payer) {
+                return TaxpayerResource::make($tax_payer);
+            }
+        }
+
+        return response()->json([]);
     }
 
-    public function consula_dni(Request $request){
+    public function consula_dni(Request $request)
+    {
 
         $request->merge(['dni' => $request->dni]);
 
@@ -76,27 +93,28 @@ class TaxPayerController extends ApiController
     }
 
 
-    public function consulta_in_reniec($dni){
+    public function consulta_in_reniec($dni)
+    {
         $response = Http::withHeaders([
             'Requestverificationtoken' => $this->token_reniec,
             'Content-Type' => 'application/json;chartset=utf-8'
-            ])->post('https://aplicaciones007.jne.gob.pe/srop_publico/Consulta/api/AfiliadoApi/GetNombresCiudadano', [
+        ])->post('https://aplicaciones007.jne.gob.pe/srop_publico/Consulta/api/AfiliadoApi/GetNombresCiudadano', [
             'CODDNI' => $dni,
         ]);
 
-        if($response->serverError()){
-          return collect([]);
+        if ($response->serverError()) {
+            return collect([]);
         }
 
-        if($response->failed()){
-           //mandar mensaje a soporte 
-           Mail::to($this->email_soporte)->send(new ResolveDniToken());
-           return collect([]);
+        if ($response->failed()) {
+            //mandar mensaje a soporte
+            Mail::to($this->email_soporte)->send(new ResolveDniToken());
+            return collect([]);
         }
-     
+
         $data = $response->json();
         $nombre = explode("|", $data['data']);
-        if($nombre[0] == ""){
+        if ($nombre[0] == "") {
             return collect([]);
         }
         $data = [
@@ -104,60 +122,56 @@ class TaxPayerController extends ApiController
                 "dni" => $dni,
                 "nombres" => "{$nombre[2]}",
                 "apellidoPaterno" => "{$nombre[0]}",
-                "apellidoMaterno" => "{$nombre[1]}",              
+                "apellidoMaterno" => "{$nombre[1]}",
             ]
         ];
         return collect($data);
     }
 
-    public function consulta_in_reniec_opcional($dni){ //Otro servicio (no estan todos) a usar posiacaso falle el primero
+    public function consulta_in_reniec_opcional($dni)
+    { //Otro servicio (no estan todos) a usar posiacaso falle el primero
 
-        $response = Http::get('https://eldni.com/buscar-por-dni?dni='.$dni);
+        $response = Http::get('https://eldni.com/buscar-por-dni?dni=' . $dni);
 
         $dom = new \DOMDocument();
         @$dom->loadHTML($response);
-    
+
         $dom->strictErrorChecking = FALSE;
-    
+
         libxml_use_internal_errors(false);
         $xml = simplexml_import_dom($dom);
-    
+
         $nombre = $xml->xpath("//table/tbody/tr/td[@class='text-left']");
         $rtn = array();
         $cont = 0;
-        foreach($nombre as $i => $obj)
-        {
+        foreach ($nombre as $i => $obj) {
             $cont++;
             $rtn[$cont]  = (string)($obj[0]);
-         
-        }    
+        }
         dd($nombre);
-        return response()->json( ['data' => ["emp_descripcion" => "{$rtn[1]} {$rtn[2]} {$rtn[3]}"]], 200);
-
-
+        return response()->json(['data' => ["emp_descripcion" => "{$rtn[1]} {$rtn[2]} {$rtn[3]}"]], 200);
     }
 
-    public function consulta_dni_curl($dni){  //usando solo curl 
+    public function consulta_dni_curl($dni)
+    {  //usando solo curl
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, 'https://aplicaciones007.jne.gob.pe/srop_publico/Consulta/api/AfiliadoApi/GetNombresCiudadano');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, "{'CODDNI':'$dni'}");
         curl_setopt($ch, CURLOPT_POST, 1);
-        
+
         $headers = array();
         $headers[] = 'Requestverificationtoken: 30OB7qfO2MmL2Kcr1z4S0ttQcQpxH9pDUlZnkJPVgUhZOGBuSbGU4qM83JcSu7DZpZw-IIIfaDZgZ4vDbwE5-L9EPoBIHOOC1aSPi4FS_Sc1:clDOiaq7mKcLTK9YBVGt2R3spEU8LhtXEe_n5VG5VLPfG9UkAQfjL_WT9ZDmCCqtJypoTD26ikncynlMn8fPz_F_Y88WFufli38cUM-24PE1';
         $headers[] = 'Content-Type: application/json;chartset=utf-8';
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        
+
         $result = curl_exec($ch);
-        
+
         echo json_encode($result);
         if (curl_errno($ch)) {
-        echo 'Error:' . curl_error($ch);
+            echo 'Error:' . curl_error($ch);
         }
         curl_close($ch);
     }
-
-
 }

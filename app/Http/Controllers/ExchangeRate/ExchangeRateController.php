@@ -8,15 +8,15 @@ use Illuminate\Support\Facades\Http;
 
 class ExchangeRateController extends Controller
 {
-    public function show(Request $request){
- 
-        if(!$request->has('mounth') && !$request->has('year')){
+    public function show(Request $request)
+    {
+        if (!$request->has('mounth') && !$request->has('year')) {
             $response = Http::withHeaders(['User-Agent' => 'Moliza / 5.0'])->get('http://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias');
-        }else{
-            $response = Http::withHeaders(['User-Agent' => 'Moliza / 5.0'])->get('http://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias?mes='.$request->mounth.'&anho='.$request->year.'&accion=init');
+        } else {
+            $response = Http::withHeaders(['User-Agent' => 'Moliza / 5.0'])->get('http://e-consulta.sunat.gob.pe/cl-at-ittipcam/tcS01Alias?mes=' . $request->mounth . '&anho=' . $request->year . '&accion=init');
         }
-        
-        if($response->failed()){
+
+        if ($response->failed()) {
             return response()->json(['errors' => array('detalle' => 'Error en la conexión con Sunat')], 400);
         }
 
@@ -35,42 +35,34 @@ class ExchangeRateController extends Controller
 
         $rtn = array();
 
-      //  $periodo = $request->period.'-'.$request->year;  // mes - año
+        //  $periodo = $request->period.'-'.$request->year;  // mes - año
 
-        if( !empty($fecha) )
-        {
+        if (!empty($fecha)) {
             $periodo = (string)$fecha[0]; //titulo de la fecha a consumir
         }
-        if( !empty($dias) && !empty($compra_venta) && count((array)$dias) == count((array)$compra_venta)/2 )
-        {
-            foreach($dias as $i => $obj)
-            {
-                $rtn[$i]['dia'] = str_pad(trim((string)$obj->strong),2,0,STR_PAD_LEFT);
+        if (!empty($dias) && !empty($compra_venta) && count((array)$dias) == count((array)$compra_venta) / 2) {
+            foreach ($dias as $i => $obj) {
+                $rtn[$i]['dia'] = str_pad(trim((string)$obj->strong), 2, 0, STR_PAD_LEFT);
                 //$rtn[$i]['fecha'] = str_pad(trim((string)$obj->strong),2,0,STR_PAD_LEFT) . '/'. $mes.'/'.$anio;
             }
             $cont = 0;
-            foreach($compra_venta as $i=>$obj)
-            {
-                if( ($i+1)%2==0 )
-                {
+            foreach ($compra_venta as $i => $obj) {
+                if (($i + 1) % 2 == 0) {
                     $rtn[$cont]['venta'] = trim((string)$obj);
                     $cont++;
-                }
-                else
-                {
+                } else {
                     $rtn[$cont]['compra'] = trim((string)$obj);
                 }
             }
         }
 
         $collect = collect($rtn);
-        if($collect->isEmpty()){
+        if ($collect->isEmpty()) {
 
-            return response()->json(['errors' => array('detalle' => 'No existe data para esa fecha')],422);
+            return response()->json(['errors' => array('detalle' => 'No existe data para esa fecha')], 422);
+        } else {
 
-        }else {
-
-            $codigo = $request->year.$request->period;
+            $codigo = $request->year . $request->period;
 
             $compra = 0.00;
             $venta = 0.00;
@@ -79,32 +71,30 @@ class ExchangeRateController extends Controller
             $final = collect();
             for ($i = 1; $i <= 31; $i++) {
 
-                if($i > $ultimosunat['dia'] ){
-                break;
-                  }
+                if ($i > $ultimosunat['dia']) {
+                    break;
+                }
 
                 $item = $collect->firstWhere('dia', $i);
 
-             //   dd($item);
-                if($item){
+                //   dd($item);
+                if ($item) {
 
                     $final->push($item);
 
                     $compra = $item['compra'];
                     $venta = $item['venta'];
+                } else {
 
-                }else{
-
-                    $final->push([
-                        'dia' => str_pad($i, 2, "0", STR_PAD_LEFT),
-                        'compra' => $compra,
-                        'venta' => $venta]
+                    $final->push(
+                        [
+                            'dia' => str_pad($i, 2, "0", STR_PAD_LEFT),
+                            'compra' => $compra,
+                            'venta' => $venta
+                        ]
                     );
-
                 }
             }
-     
-
         }
 
         return $final;

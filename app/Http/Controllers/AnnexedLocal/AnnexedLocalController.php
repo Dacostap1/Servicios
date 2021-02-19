@@ -3,14 +3,14 @@
 namespace App\Http\Controllers\AnnexedLocal;
 
 use App\AnnexedLocal;
-use Illuminate\Http\Request;
 use App\Http\Controllers\ApiController;
+use App\Http\Resources\LocalAnexoResource;
 
 class AnnexedLocalController extends ApiController
 {
-    public function show($cadena)  //ahora es para ruc y dni
+    public function show($cadena)
     {
         $tax_payer = AnnexedLocal::where('loc_ruc', $cadena)->get();
-        return $this->showOne($tax_payer);
+        return LocalAnexoResource::collection($tax_payer);
     }
 }
