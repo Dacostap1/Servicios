@@ -6,7 +6,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
-class DeleteData extends Command
+class TaxpayersDeleteData extends Command
 {
     /**
      * The name and signature of the console command.

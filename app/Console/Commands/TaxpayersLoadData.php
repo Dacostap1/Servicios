@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class LoadData extends Command
+class TaxpayersLoadData extends Command
 {
     /**
      * The name and signature of the console command.
@@ -44,7 +44,7 @@ class LoadData extends Command
        $url = storage_path('app/padron_reducido') . '/padron_reducido_ruc.txt';
 
        if(env('APP_ENV') == 'local'){
-         $url = 'C:/xampp/htdocs/Laravel/servicios/storage/app/padron_reducido/padron_reducido_ruc.txt';
+         $url = ENV('PATH_PROJECT_WINDOWS') . '/storage/app/padron_reducido/padron_reducido_ruc.txt';
        }
       
         DB::connection()->getPdo()
