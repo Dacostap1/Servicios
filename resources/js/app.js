@@ -4,9 +4,15 @@
  * building robust, powerful web applications using Vue and Laravel.
  */
 
-require('./bootstrap');
+require("./bootstrap");
 
-window.Vue = require('vue');
+//window.Vue = require('vue');
+
+import Vue from "vue";
+
+import Clients from "./components/passport/Clients.vue";
+import AuthorizedClients from "./components/passport/AuthorizedClients.vue";
+import PersonalAccessTokens from "./components/passport/PersonalAccessTokens.vue";
 
 /**
  * The following block of code may be used to automatically register your
@@ -19,20 +25,11 @@ window.Vue = require('vue');
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
-Vue.component(
-    'passport-clients',
-    require('./components/passport/Clients.vue').default
-  );
-  
-  Vue.component(
-    'passport-authorized-clients',
-    require('./components/passport/AuthorizedClients.vue').default
-  );
-  
-  Vue.component(
-    'passport-personal-access-tokens',
-    require('./components/passport/PersonalAccessTokens.vue').default
-  );
+Vue.component("passport-clients", Clients);
+
+Vue.component("passport-authorized-clients", AuthorizedClients);
+
+Vue.component("passport-personal-access-tokens", PersonalAccessTokens);
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
@@ -40,5 +37,5 @@ Vue.component(
  */
 
 const app = new Vue({
-    el: '#app',
+    el: "#app",
 });
