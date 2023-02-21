@@ -49,19 +49,20 @@ class JsonApiBuilder
         };
     }
 
-    public function applyFilters()   //Las funciones de los mixins siempre retornan una funcion anonima
+    //Las funciones de los mixins siempre retornan una funcion anonima
+    public function applyFilters()   
     {
         return function () {
-            foreach (request('filter', []) as $filter => $value) { //Segundo parametro del request [], valor por defecto para que no falle foreach
 
+            //obtenermos los valores del request si tiene el scope filtramos
+            foreach (request()->all() as $filter => $value) { 
+         
                 $scope = "scope" . ucfirst($filter);
-
-                if (!method_exists($this->model, $scope)) {  //validamos que exista el scope en el modelo
-                    abort(400, "The filter {$filter} is not allowed");
+       
+                //validamos que exista el scope en el modelo
+                if (method_exists($this->model, $scope)) {  
+                   $this->{$filter}($value); //Busca scope en el modelo
                 }
-
-
-                $this->{$filter}($value); //Busca scope en el modelo
             }
 
             return $this;
